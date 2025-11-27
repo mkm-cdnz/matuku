@@ -16,7 +16,8 @@ const snapAngle = (angle: number, step: number) => {
 
 export const getDirectionLabel = (angle: number) => {
     const sectorSize = 360 / DIRECTIONS.length; // 22.5°
-    const index = Math.round(((angle % 360) + sectorSize / 2) / sectorSize) % DIRECTIONS.length;
+    const normalizedAngle = ((angle % 360) + 360) % 360;
+    const index = Math.floor((normalizedAngle + sectorSize / 2) / sectorSize) % DIRECTIONS.length;
     return DIRECTIONS[index];
 };
 
