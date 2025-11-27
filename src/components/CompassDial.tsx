@@ -16,7 +16,8 @@ const snapAngle = (angle: number, step: number) => {
 
 export const getDirectionLabel = (angle: number) => {
     const sectorSize = 360 / DIRECTIONS.length; // 22.5°
-    const index = Math.round(((angle % 360) + sectorSize / 2) / sectorSize) % DIRECTIONS.length;
+    const normalizedAngle = ((angle % 360) + 360) % 360;
+    const index = Math.floor((normalizedAngle + sectorSize / 2) / sectorSize) % DIRECTIONS.length;
     return DIRECTIONS[index];
 };
 
@@ -32,7 +33,7 @@ export const CompassDial: React.FC<CompassDialProps> = ({ value, onChange, size 
             const rect = dialRef.current.getBoundingClientRect();
             const x = event.clientX - rect.left - rect.width / 2;
             const y = event.clientY - rect.top - rect.height / 2;
-            const angle = (Math.atan2(x, -y) * 180) / Math.PI;
+            const angle = ((Math.atan2(y, x) * 180) / Math.PI + 450) % 360;
             const snapped = snapAngle((angle + 360) % 360, 10);
             onChange(snapped);
         },
