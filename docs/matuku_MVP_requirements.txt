@@ -1,0 +1,236 @@
+The requirements document has been formatted into a text file using Markdown for structure and JSON objects for the detailed requirements, ensuring high readability for both humans and LLMs.
+
+````text
+# AUSTRALASIAN BITTERN (MATUKU) FIELD APP - MVP REQUIREMENTS (V1.0)
+
+## 1. PROJECT CONTEXT & GOALS
+
+```json
+{
+  "project_context": {
+    "project_name": "Matuku Booming Log MVP (Version 1.0)",
+    "primary_goal": "Create a high-quality portfolio project demonstrating UX and data reliability skills in a conservation context.",
+    "secondary_goal": "Eliminate manual data transcription and field logging errors for observers.",
+    "target_user": "Volunteers and DOC Staff (Field Observers)",
+    "target_devices": "Android & iOS Smartphones (Mobile-First UX)",
+    "target_protocol": "Australasian Bittern Triangulation Count (1-Hour Dusk Period)"
+  }
+}
+````
+
+-----
+
+## 2\. USER STORIES (AS-IS / TO-BE)
+
+```json
+{
+  "user_stories": [
+    {
+      "id": "US-101",
+      "type": "Automation",
+      "description": "As a field observer, I can log the exact time of the last boom with a **single tap**, ensuring **HH:MM:SS** accuracy, to avoid manually typing time.",
+      "addresses_pain": "Manually typing the time for each boom train."
+    },
+    {
+      "id": "US-102",
+      "type": "Workflow",
+      "description": "As a field observer, I can **export all session data as a structured CSV file** that is ready for analysis, eliminating manual data transcription into the official spreadsheet.",
+      "addresses_pain": "Manually typing observations into the official spreadsheet."
+    },
+    {
+      "id": "US-103",
+      "type": "Reliability",
+      "description": "As a field observer, I need assurance that my night's data is safely stored **locally and reliably**, even if I have no connectivity in the wetland.",
+      "addresses_constraint": "Loss of data due to connectivity issues."
+    }
+  ]
+}
+```
+
+-----
+
+## 3\. FUNCTIONAL REQUIREMENTS (FR)
+
+### 3.1 Session Setup & Environmental Logging
+
+```json
+{
+  "fr_setup_env": [
+    {
+      "id": "FR-1.1",
+      "requirement": "Observer ID Capture",
+      "detail": "On first launch, the app must prompt the user to enter their **Observer Name**. This value must be stored locally and used for the **Observer_ID** column in all subsequent sessions (Traceability)."
+    },
+    {
+      "id": "FR-1.2",
+      "requirement": "Location & Time Capture",
+      "detail": "The app must automatically capture and display the current **GPS Coordinates** (Lat/Lon) and **Date**."
+    },
+    {
+      "id": "FR-1.3",
+      "requirement": "Sunset Calculation",
+      "detail": "The app must calculate and display the **local sunset time** on the setup screen based on GPS/Date, using a local library (offline capability)."
+    },
+    {
+      "id": "FR-1.4",
+      "requirement": "Environmental Log Fields",
+      "detail": "The Setup Screen must include mandatory input fields for **Noise Level, Wind Strength, Moon Visibility, Cloud Cover, and Rain/Precipitation**."
+    },
+    {
+      "id": "FR-1.5",
+      "requirement": "Environmental Guidance",
+      "detail": "All environmental input fields must use a **short, plain-language summary** next to the category label (e.g., 'Medium Noise: Faraway calls may be missed')."
+    },
+    {
+      "id": "FR-1.6",
+      "requirement": "Mid-Session Update",
+      "detail": "The app must allow logging an **update to any environmental condition** during the count, capturing the update with an **automated timestamp** (HH:MM:SS)."
+    }
+  ]
+}
+```
+
+### 3.2 Core Boom Logging Flow
+
+```json
+{
+  "fr_boom_logging": [
+    {
+      "id": "FR-2.1",
+      "requirement": "Count Timer",
+      "detail": "The app must initiate and display a **60-minute countdown timer** upon session start."
+    },
+    {
+      "id": "FR-2.2",
+      "requirement": "Core Call Recorder",
+      "detail": "The app must feature a **single, large-target button** that instantly logs the event's **Time of Last Boom (HH:MM:SS)** when tapped."
+    },
+    {
+      "id": "FR-2.3",
+      "requirement": "Boom Detail Input Priority",
+      "detail": "Following FR-2.2, the user must input the three manual variables in this priority order: **1. Boom Count**, **2. Compass Bearing**, **3. Estimated Distance**."
+    },
+    {
+      "id": "FR-2.4",
+      "requirement": "Boom Count Input",
+      "detail": "Input for **Boom Count** must be a simple **'+' and '–' button** interface, not a full keyboard."
+    },
+    {
+      "id": "FR-2.5",
+      "requirement": "Bearing Input",
+      "detail": "Input for **Compass Bearing** must use a **visual dial/slider** control (Degrees) for manual input."
+    },
+    {
+      "id": "FR-2.6",
+      "requirement": "Individual Tracking",
+      "detail": "The logged call must be assigned a unique **Bittern ID** (New or Existing) based on the observer's determination."
+    }
+  ]
+}
+```
+
+### 3.3 Data Management & Export
+
+```json
+{
+  "fr_data_management": [
+    {
+      "id": "FR-3.1",
+      "requirement": "Undo Functionality",
+      "detail": "The app must include an **'Undo Last Entry'** feature that triggers a **confirmation modal** before deleting the most recent record."
+    },
+    {
+      "id": "FR-3.2",
+      "requirement": "Edit Functionality",
+      "detail": "The app must allow the user to **edit any logged call** (all variables) before the session data is exported."
+    },
+    {
+      "id": "FR-3.3",
+      "requirement": "Data Export",
+      "detail": "All session data must be exportable as a single, structured **CSV file**."
+    }
+  ]
+}
+```
+
+-----
+
+## 4\. NON-FUNCTIONAL REQUIREMENTS (NFR)
+
+```json
+{
+  "nfr": [
+    {
+      "id": "NFR-1.1",
+      "category": "Reliability/Data Integrity",
+      "requirement": "All observation data must be stored **locally** on the device (using SQLite or equivalent) and must not rely on external connectivity for logging."
+    },
+    {
+      "id": "NFR-2.1",
+      "category": "UX/Usability",
+      "requirement": "The app must **default to All-Dark/Night Mode** and provide a simple **Day Mode Toggle**."
+    },
+    {
+      "id": "NFR-2.2",
+      "category": "UX/Usability",
+      "requirement": "The app must provide **haptic feedback** (vibration) upon successful logging of a boom train (FR-2.2) to confirm entry silently."
+    },
+    {
+      "id": "NFR-3.1",
+      "category": "Data Integrity/Validation",
+      "requirement": "If the user attempts to start the count without completing the mandatory environmental fields, the app must display a **warning modal** that prompts them to complete the missing fields."
+    }
+  ]
+}
+```
+
+-----
+
+## 5\. DATA REQUIREMENTS (CSV EXPORT SCHEMA)
+
+### 5.1 Session/Setup Data (Primary Record)
+
+```json
+{
+  "schema_session": [
+    {"column_header": "Observer_ID", "data_type": "Text", "notes": "Name captured via FR-1.1"},
+    {"column_header": "Session_Date", "data_type": "Date", "notes": "Auto-captured"},
+    {"column_header": "Station_Lat", "data_type": "Decimal", "notes": "Auto-captured GPS Latitude"},
+    {"column_header": "Station_Lon", "data_type": "Decimal", "notes": "Auto-captured GPS Longitude"},
+    {"column_header": "Session_Start_Time", "data_type": "HH:MM:SS", "notes": "Time the 1-hour count began"},
+    {"column_header": "Sunset_Time", "data_type": "HH:MM", "notes": "Calculated local sunset time"}
+  ]
+}
+```
+
+### 5.2 Environmental Data (Initial Log and Updates)
+
+```json
+{
+  "schema_environmental": [
+    {"column_header": "Env_Timestamp", "data_type": "HH:MM:SS", "notes": "Time of initial log or mid-session update (FR-1.6)"},
+    {"column_header": "Noise_Level", "data_type": "Text", "categories": ["Low", "Medium", "High"]},
+    {"column_header": "Wind_Strength", "data_type": "Text", "categories": ["Calm", "Light", "Moderate", "Strong"]},
+    {"column_header": "Moon_Visibility", "data_type": "Text", "categories": ["Visible", "Not Visible"]},
+    {"column_header": "Cloud_Cover", "data_type": "Text", "categories": ["Clear (0-25%)", "Partially Cloudy (25-75%)", "Overcast (75-100%)"]},
+    {"column_header": "Rain_Presence", "data_type": "Text", "categories": ["No Rain", "Light Drizzle", "Rain"]}
+  ]
+}
+```
+
+### 5.3 Boom Train Data (One Row Per Logged Boom)
+
+```json
+{
+  "schema_boom_log": [
+    {"column_header": "Call_Timestamp", "data_type": "HH:MM:SS", "notes": "Time of the last boom (Logged via single tap FR-2.2)"},
+    {"column_header": "Boom_Count", "data_type": "Integer", "notes": "Number of booms in the train (via +/- buttons FR-2.4)"},
+    {"column_header": "Compass_Bearing", "data_type": "Integer", "notes": "Direction in Degrees (via dial/slider FR-2.5)"},
+    {"column_header": "Est_Distance_M", "data_type": "Integer", "notes": "Subjective distance estimate (Meters)"},
+    {"column_header": "Bittern_ID", "data_type": "Text", "notes": "Unique identifier for the bird (FR-2.6)"}
+  ]
+}
+```
+
+```
+```
