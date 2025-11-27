@@ -1,0 +1,47 @@
+# .github/workflows/deploy.yml
+name: Deploy PWA to GCS
+
+on:
+  push:
+    # Trigger this workflow only when changes are pushed to the main branch
+    branches:
+      - main
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. Checkout the repository code
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. (Optional, but recommended for PWAs) Install dependencies and build
+      #    Replace these steps with your actual build process (npm, yarn, etc.)
+      - name: Install Dependencies
+        run: npm install
+        
+      - name: Build Project
+        run: npm run build
+        
+      # 3. Authenticate to Google Cloud
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          # Uses the secret you created in GitHub
+          credentials_json: '${{ secrets.GCP_SA_KEY_MATUKU }}'
+          
+      # 4. Upload the built files to the GCS bucket
+      - name: Upload to Google Cloud Storage
+        uses: 'google-github-actions/upload-cloud-storage@v2'
+        with:
+          # Your PWA's output directory (where dist/ is generated)
+          path: 'dist' 
+          # The name of your Google Cloud bucket
+          destination: 'web-visualisations/matuku' 
+          # Ensures files are served publicly if your bucket policy requires it
+          predefinedAcl: 'publicRead' 
+          # Overwrite all files in the destination path
+          parent: false
