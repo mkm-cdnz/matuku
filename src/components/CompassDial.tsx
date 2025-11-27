@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 type CompassDialProps = {
     value: number;
@@ -14,9 +14,16 @@ const snapAngle = (angle: number, step: number) => {
     return (snapped + 360) % 360;
 };
 
+const pointerToHeading = (x: number, y: number) => {
+    // Translate screen coordinates (y grows downward) into a compass heading where
+    // north is 0° and angles grow clockwise, matching the dial's orientation.
+    return ((Math.atan2(x, -y) * 180) / Math.PI + 360) % 360;
+};
+
 export const getDirectionLabel = (angle: number) => {
     const sectorSize = 360 / DIRECTIONS.length; // 22.5°
-    const index = Math.round(((angle % 360) + sectorSize / 2) / sectorSize) % DIRECTIONS.length;
+    const normalizedAngle = ((angle % 360) + 360) % 360;
+    const index = Math.floor((normalizedAngle + sectorSize / 2) / sectorSize) % DIRECTIONS.length;
     return DIRECTIONS[index];
 };
 
@@ -32,8 +39,8 @@ export const CompassDial: React.FC<CompassDialProps> = ({ value, onChange, size 
             const rect = dialRef.current.getBoundingClientRect();
             const x = event.clientX - rect.left - rect.width / 2;
             const y = event.clientY - rect.top - rect.height / 2;
-            const angle = (Math.atan2(x, -y) * 180) / Math.PI;
-            const snapped = snapAngle((angle + 360) % 360, 10);
+            const heading = pointerToHeading(x, y);
+            const snapped = snapAngle(heading, 10);
             onChange(snapped);
         },
         [onChange]
@@ -62,6 +69,8 @@ export const CompassDial: React.FC<CompassDialProps> = ({ value, onChange, size 
         setIsDragging(false);
         window.removeEventListener('pointermove', handlePointerMove as any);
     }, [handlePointerMove]);
+
+    useEffect(() => () => window.removeEventListener('pointermove', handlePointerMove as any), [handlePointerMove]);
 
     const handleKeyDown = (event: React.KeyboardEvent) => {
         if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') {
