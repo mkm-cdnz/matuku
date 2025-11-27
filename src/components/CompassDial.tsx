@@ -31,10 +31,24 @@ export const CompassDial: React.FC<CompassDialProps> = ({ value, onChange, size 
         (event: PointerEvent | React.PointerEvent) => {
             if (!dialRef.current) return;
             const rect = dialRef.current.getBoundingClientRect();
+            
+            // Calculate coordinates relative to the center of the dial
             const x = event.clientX - rect.left - rect.width / 2;
             const y = event.clientY - rect.top - rect.height / 2;
-            const angle = (Math.atan2(x, -y) * 180) / Math.PI;
-            const snapped = snapAngle((angle + 360) % 360, 10);
+
+            // 1. Calculate standard Cartesian angle (0 deg = East, CCW)
+            const angleInRad = Math.atan2(y, x);
+            let degrees = (angleInRad * 180) / Math.PI;
+
+            // 2. Correct for Compass Bearings (0 deg = North, Clockwise)
+            // Shift by 90 degrees and reverse rotation
+            degrees = 90 - degrees;
+
+            // 3. Normalize to 0-360 range
+            const normalizedAngle = (degrees + 360) % 360; 
+
+            // 4. Snap and update
+            const snapped = snapAngle(normalizedAngle, 10);
             onChange(snapped);
         },
         [onChange]
@@ -50,7 +64,10 @@ export const CompassDial: React.FC<CompassDialProps> = ({ value, onChange, size 
             const handleY = handlePosition.y - radius;
             const distanceToHandle = Math.hypot(x - handleX, y - handleY);
             const shouldDrag = distanceToHandle < 36;
-            handlePointerMove(event);
+            
+            // We still want to update the value immediately on click/down
+            handlePointerMove(event); 
+            
             if (shouldDrag) {
                 setIsDragging(true);
                 window.addEventListener('pointermove', handlePointerMove as any);
@@ -85,7 +102,8 @@ export const CompassDial: React.FC<CompassDialProps> = ({ value, onChange, size 
     }, []);
 
     const handlePosition = useMemo(() => {
-        const radians = ((value - 90) * Math.PI) / 180;
+        // This is correct: (value - 90) shifts 0deg to the top (North) for SVG's coordinate system
+        const radians = ((value - 90) * Math.PI) / 180; 
         const handleRadius = radius - 28;
         return {
             x: radius + handleRadius * Math.cos(radians),
@@ -168,4 +186,3 @@ export const CompassDial: React.FC<CompassDialProps> = ({ value, onChange, size 
         </div>
     );
 };
-
