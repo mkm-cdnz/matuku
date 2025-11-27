@@ -20,8 +20,10 @@ interface SessionState extends SessionData {
     // Bittern ID state & actions
     bitternIds: string[];
     nextBitternId: number;
+    lastSelectedBitternId: string | null;
     addBitternId: (id: string) => void;
     incrementBitternId: () => void;
+    selectBitternId: (id: string) => void;
 }
 
 const initialState: SessionData = {
@@ -72,13 +74,36 @@ export const useSessionStore = create<SessionState>()(
             deleteBoomLog: (id) =>
                 set((state) => ({ boomLogs: state.boomLogs.filter((log) => log.id !== id) })),
             endSession: () => set({ status: 'FINISHED' }),
-            resetSession: () => set({ ...initialState, sessionDate: new Date().toISOString().split('T')[0] }),
+            resetSession: () =>
+                set({
+                    ...initialState,
+                    sessionDate: new Date().toISOString().split('T')[0],
+                    bitternIds: [],
+                    nextBitternId: 1,
+                    lastSelectedBitternId: null,
+                }),
 
             // Bittern ID state & actions
             bitternIds: [] as string[],
             nextBitternId: 1,
-            addBitternId: (id) => set((state) => ({ bitternIds: [...state.bitternIds, id] })),
+            lastSelectedBitternId: null,
+            addBitternId: (id) =>
+                set((state) => {
+                    const ids = state.bitternIds.includes(id) ? state.bitternIds : [...state.bitternIds, id];
+                    const match = id.match(/^B(\d+)$/i);
+                    const parsed = match ? parseInt(match[1], 10) : null;
+                    const nextBitternId = parsed ? Math.max(state.nextBitternId, parsed + 1) : state.nextBitternId;
+                    return { bitternIds: ids, nextBitternId };
+                }),
             incrementBitternId: () => set((state) => ({ nextBitternId: state.nextBitternId + 1 })),
+            selectBitternId: (id) =>
+                set((state) => {
+                    const ids = state.bitternIds.includes(id) ? state.bitternIds : [...state.bitternIds, id];
+                    const match = id.match(/^B(\d+)$/i);
+                    const parsed = match ? parseInt(match[1], 10) : null;
+                    const nextBitternId = parsed ? Math.max(state.nextBitternId, parsed + 1) : state.nextBitternId;
+                    return { bitternIds: ids, lastSelectedBitternId: id, nextBitternId };
+                }),
         }),
         {
             name: 'matuku-session-storage',

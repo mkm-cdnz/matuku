@@ -3,11 +3,12 @@ import { useSessionStore } from './store/sessionStore';
 import { SetupScreen } from './components/SetupScreen';
 import { ActiveSessionScreen } from './components/ActiveSessionScreen';
 import { HistoryView } from './components/HistoryView';
+import { RecentLogsView } from './components/RecentLogsView';
 
 function App() {
   const status = useSessionStore((state) => state.status);
   const resetSession = useSessionStore((state) => state.resetSession);
-  const [tab, setTab] = useState<'log' | 'history'>('log');
+  const [tab, setTab] = useState<'log' | 'recent' | 'history'>('log');
 
   // Force dark mode
   useEffect(() => {
@@ -40,6 +41,12 @@ function App() {
           Log
         </button>
         <button
+          onClick={() => setTab('recent')}
+          className={`px-4 py-2 rounded ${tab === 'recent' ? 'bg-emerald-600' : 'bg-slate-600'} transition`}
+        >
+          Recent Logs
+        </button>
+        <button
           onClick={() => setTab('history')}
           className={`px-4 py-2 rounded ${tab === 'history' ? 'bg-emerald-600' : 'bg-slate-600'} transition`}
         >
@@ -50,7 +57,8 @@ function App() {
       {status === 'SETUP' && <SetupScreen />}
       {status === 'ACTIVE' && (
         <>
-          {tab === 'log' && <ActiveSessionScreen />}
+          {tab === 'log' && <ActiveSessionScreen onShowRecent={() => setTab('recent')} />}
+          {tab === 'recent' && <RecentLogsView />}
           {tab === 'history' && <HistoryView />}
         </>
       )}
