@@ -12,6 +12,9 @@ on:
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
+    env:
+      GCS_BUCKET: web-visualisations
+      GCS_PREFIX: matuku
     
     steps:
       # 1. Checkout the repository code

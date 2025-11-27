@@ -105,6 +105,25 @@ export default defineConfig([
     },
   },
 ])
+``` 
+
+## Deployment
+
+The GitHub Actions workflow uploads the `dist/` build artifacts to the `web-visualisations` bucket (under the `matuku` prefix). The bucket name and prefix are set once at the job level (`GCS_BUCKET` and `GCS_PREFIX`) to avoid merge conflicts and make it easy to swap destinations.
+
+Ensure the service account used by the `GCP_SA_KEY_MATUKU` secret has **Storage Object Creator** (or **Storage Object Admin**) permissions on that bucket; otherwise uploads will fail with a `storage.objects.create` permission error. Once permissions are fixed, the workflow’s `Validate bucket permissions` step will succeed before attempting uploads.
+
+Quick fix for missing permissions (run locally or in Cloud Shell):
+
+```
+gsutil iam ch serviceAccount:github-deployer@web-visualisations.iam.gserviceaccount.com:roles/storage.objectCreator gs://web-visualisations
+gsutil iam ch serviceAccount:github-deployer@web-visualisations.iam.gserviceaccount.com:roles/storage.legacyBucketReader gs://web-visualisations
+```
+
+If the bucket doesn't exist yet, create it first:
+
+```
+gsutil mb -p web-visualisations -c standard -l australia-southeast1 gs://web-visualisations
 ```
 
 ## Deployment
