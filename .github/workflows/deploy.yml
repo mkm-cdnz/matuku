@@ -32,7 +32,21 @@ jobs:
         with:
           # Uses the secret you created in GitHub
           credentials_json: '${{ secrets.GCP_SA_KEY_MATUKU }}'
-          
+          # The service account needs Storage Object Creator (or Admin) on the
+          # "web-visualisations" bucket to upload build artifacts.
+
+      # Install gcloud/gsutil for permission validation (faster feedback than
+      # failing mid-upload with a 403).
+      - name: Set up Cloud SDK
+        uses: 'google-github-actions/setup-gcloud@v2'
+
+      - name: Validate bucket permissions
+        run: |
+          gsutil ls -L gs://web-visualisations/matuku || {
+            echo "Missing access: grant roles/storage.objectCreator (or Admin) to ${{ steps.auth.outputs.client_email }} on gs://web-visualisations.";
+            exit 1;
+          }
+
       # 4. Upload the built files to the GCS bucket
       - name: Upload to Google Cloud Storage
         uses: 'google-github-actions/upload-cloud-storage@v2'
