@@ -32,6 +32,8 @@ jobs:
         with:
           # Uses the secret you created in GitHub
           credentials_json: '${{ secrets.GCP_SA_KEY_MATUKU }}'
+          # The service account needs Storage Object Creator (or Admin) on the
+          # "web-visualisations" bucket to upload build artifacts.
           
       # 4. Upload the built files to the GCS bucket
       - name: Upload to Google Cloud Storage
