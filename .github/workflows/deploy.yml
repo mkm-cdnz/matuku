@@ -15,7 +15,7 @@ jobs:
     env:
       GCS_BUCKET: web-visualisations
       GCS_PREFIX: matuku
-    
+      
     steps:
       # 1. Checkout the repository code
       - name: Checkout Repository
@@ -39,20 +39,9 @@ jobs:
           # "web-visualisations" bucket to upload build artifacts.
           
       # 4. Upload the built files to the GCS bucket
-
-     # Before (Causes Error):
-# - name: Upload to Google Cloud Storage
-#   uses: 'google-github-actions/upload-cloud-storage@v2'
-#   with:
-#     path: 'dist' 
-#     destination: 'web-visualisations/matuku' 
-#     predefinedAcl: 'publicRead'  <- REMOVE THIS LINE
-#     parent: false 
-
-# After (Corrected):
-- name: Upload to Google Cloud Storage
-  uses: 'google-github-actions/upload-cloud-storage@v2'
-  with:
-    path: 'dist' 
-    destination: 'web-visualisations/matuku' 
-    parent: false
+      - name: Upload to Google Cloud Storage
+        uses: 'google-github-actions/upload-cloud-storage@v2'
+        with:
+          path: 'dist' 
+          destination: 'web-visualisations/matuku' 
+          parent: false
