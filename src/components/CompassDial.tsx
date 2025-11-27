@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 type CompassDialProps = {
     value: number;
@@ -12,6 +12,12 @@ const DIRECTIONS = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW'
 const snapAngle = (angle: number, step: number) => {
     const snapped = Math.round(angle / step) * step;
     return (snapped + 360) % 360;
+};
+
+const pointerToHeading = (x: number, y: number) => {
+    // Translate screen coordinates (y grows downward) into a compass heading where
+    // north is 0° and angles grow clockwise, matching the dial's orientation.
+    return ((Math.atan2(x, -y) * 180) / Math.PI + 360) % 360;
 };
 
 export const getDirectionLabel = (angle: number) => {
@@ -80,6 +86,8 @@ export const CompassDial: React.FC<CompassDialProps> = ({ value, onChange, size 
         setIsDragging(false);
         window.removeEventListener('pointermove', handlePointerMove as any);
     }, [handlePointerMove]);
+
+    useEffect(() => () => window.removeEventListener('pointermove', handlePointerMove as any), [handlePointerMove]);
 
     const handleKeyDown = (event: React.KeyboardEvent) => {
         if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') {
