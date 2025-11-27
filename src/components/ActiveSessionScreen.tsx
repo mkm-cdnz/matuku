@@ -21,6 +21,10 @@ export const ActiveSessionScreen: React.FC<ActiveSessionScreenProps> = ({ onShow
         nextBitternId,
         lastSelectedBitternId,
         selectBitternId,
+        deleteBoomLog,
+        endSession,
+        sessionStartTime,
+        sessionDate,
     } = useSessionStore();
 
     const [elapsedTime, setElapsedTime] = useState(0);

@@ -23,7 +23,6 @@ export const getDirectionLabel = (angle: number) => {
 export const CompassDial: React.FC<CompassDialProps> = ({ value, onChange, size = 260, showDirectionText = true }) => {
     const [isDragging, setIsDragging] = useState(false);
     const dialRef = useRef<SVGSVGElement | null>(null);
-    const activePointerId = useRef<number | null>(null);
 
     const radius = size / 2;
 
@@ -41,39 +40,28 @@ export const CompassDial: React.FC<CompassDialProps> = ({ value, onChange, size 
     );
 
     const handlePointerDown = (event: React.PointerEvent) => {
-        const rect = dialRef.current?.getBoundingClientRect();
-        if (!rect) return;
-
-        const x = event.clientX - rect.left - rect.width / 2;
-        const y = event.clientY - rect.top - rect.height / 2;
-        const handleX = handlePosition.x - radius;
-        const handleY = handlePosition.y - radius;
-        const distanceToHandle = Math.hypot(x - handleX, y - handleY);
-
-        // Require the user to grab the handle to avoid accidental clicks elsewhere on the dial
-        if (distanceToHandle > 36) return;
-
         event.preventDefault();
-        dialRef.current?.setPointerCapture(event.pointerId);
-        activePointerId.current = event.pointerId;
-        handlePointerMove(event);
-        setIsDragging(true);
-        window.addEventListener('pointermove', handlePointerMove as any);
+        const rect = dialRef.current?.getBoundingClientRect();
+        if (rect) {
+            const x = event.clientX - rect.left - rect.width / 2;
+            const y = event.clientY - rect.top - rect.height / 2;
+            const handleX = handlePosition.x - radius;
+            const handleY = handlePosition.y - radius;
+            const distanceToHandle = Math.hypot(x - handleX, y - handleY);
+            const shouldDrag = distanceToHandle < 36;
+            handlePointerMove(event);
+            if (shouldDrag) {
+                setIsDragging(true);
+                window.addEventListener('pointermove', handlePointerMove as any);
+            }
+        }
         window.addEventListener('pointerup', handlePointerUp as any, { once: true });
     };
 
-    const handlePointerUp = useCallback(
-        (event?: PointerEvent) => {
-            setIsDragging(false);
-            const pointerId = event?.pointerId ?? activePointerId.current;
-            if (pointerId !== null) {
-                dialRef.current?.releasePointerCapture?.(pointerId);
-            }
-            activePointerId.current = null;
-            window.removeEventListener('pointermove', handlePointerMove as any);
-        },
-        [handlePointerMove]
-    );
+    const handlePointerUp = useCallback(() => {
+        setIsDragging(false);
+        window.removeEventListener('pointermove', handlePointerMove as any);
+    }, [handlePointerMove]);
 
     const handleKeyDown = (event: React.KeyboardEvent) => {
         if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') {

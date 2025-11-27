@@ -124,7 +124,7 @@ export const BoomLogForm: React.FC<BoomLogFormProps> = ({ initialData, onSubmit,
                             <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-3 text-sm text-slate-300">
                                 <p className="font-semibold text-slate-200 mb-1">Compass dial tips</p>
                                 <ul className="list-disc list-inside space-y-1 text-slate-400">
-                                    <li>Grab and drag the red handle to snap to 10° increments.</li>
+                                    <li>Drag the red handle or tap the dial to snap to 10° increments.</li>
                                     <li>Arrow keys nudge by 10° when focused.</li>
                                     <li>Cardinal/intercardinal labels update for nearby values.</li>
                                 </ul>
