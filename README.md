@@ -1,3 +1,36 @@
+# Matuku: Australasian Bittern Field Logger (MVP)
+
+[![Architecture](https://img.shields.io/badge/Architecture-PWA%20(Platform%20Agnostic)-blue.svg)](https://en.wikipedia.org/wiki/Progressive_web_app)
+[![Data Integrity](https://img.shields.io/badge/Data%20Storage-Offline--First%20Reliability-red.svg)](https://en.wikipedia.org/wiki/Offline-first)
+[![UX Focus](https://img.shields.io/badge/UX%20Design-Protocol%20Optimization%20%26%20Haptics-lightgrey.svg)](#key-features)
+
+**Matuku** is a Minimum Viable Product (MVP) of a Progressive Web Application (PWA) designed to replace manual, error-prone field notes for volunteer observers monitoring the endangered Australasian Bittern (Matuku). It ensures compliance with the Department of Conservation (DOC) observation protocols through a structured, mobile-first interface. It is based on my observation of pain points participating in 
+
+### Project Motivation
+
+This project was inspired by firsthand experience participating in Australasian Bittern monitoring, specifically **logging boom trains** during the critical dusk observation period. Observing that pre-existing application solutions faced adoption and setup challenges - often causing volunteers to revert to (potentially unreliable) manual logging methods - I engineered this alternative. The goal is to provide conservation teams with a robust, platform-agnostic tool that guarantees **data integrity** and minimizes administrative friction.
+
+## Value Proposition (Proof of Concept)
+
+This project demonstrates the core technical architecture required to guarantee data capture reliability and eliminate major administrative pain points associated with conservation fieldwork.
+
+| Pain Point | Solution Focus | Portfolio Highlight |
+| :--- | :--- | :--- |
+| **Data Loss** | **Offline-First Storage:** Local persistence (SQLite/IndexedDB) ensures data integrity regardless of remote connectivity. | Reliability Engineering |
+| **Manual Timestamps** | **Single-Tap Logging:** UX design centralizes the **Core Call Recorder** to auto-capture accurate **HH:MM:SS** on event. | Workflow Automation |
+| **Complex Admin** | **Platform Agnostic & No Login:** Reduces barrier to entry for volunteers and outputs direct **CSV Export** for coordinators. | Accessibility & Data Flow Design |
+| **Nighttime UX** | **Optimized Input:** Enforces **Dark Mode** and integrates **Haptic Feedback** for high-fidelity data entry in low-light conditions. | Constraint-Driven UX |
+
+## Key Features Demonstrated (MVP)
+
+* **1-Hour Dusk Timer** and **Sunset Calculation** (Local/Offline).
+* Structured input for all mandatory environmental variables (Noise, Wind, Cloud Cover).
+* Automated GPS/Time capture and manual **dial/slider** input for accurate compass bearing.
+* Session-based local data storage and **CSV Export** functionality.
+
+
+***
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
