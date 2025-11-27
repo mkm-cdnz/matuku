@@ -125,3 +125,7 @@ If the bucket doesn't exist yet, create it first:
 ```
 gsutil mb -p web-visualisations -c standard -l australia-southeast1 gs://web-visualisations
 ```
+
+## Deployment
+
+The GitHub Actions workflow uploads the `dist/` build artifacts to the `web-visualisations` bucket (under the `matuku` prefix). Ensure the service account used by the `GCP_SA_KEY_MATUKU` secret has **Storage Object Creator** (or **Storage Object Admin**) permissions on that bucket; otherwise uploads will fail with a `storage.objects.create` permission error.
