@@ -12,6 +12,9 @@ on:
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
+    env:
+      GCS_BUCKET: web-visualisations
+      GCS_PREFIX: matuku
     
     steps:
       # 1. Checkout the repository code
@@ -32,6 +35,20 @@ jobs:
         with:
           # Uses the secret you created in GitHub
           credentials_json: '${{ secrets.GCP_SA_KEY_MATUKU }}'
+          # The service account needs Storage Object Creator (or Admin) on the
+          # "web-visualisations" bucket to upload build artifacts.
+          
+      # Install gcloud/gsutil for permission validation (faster feedback than
+      # failing mid-upload with a 403).
+      - name: Set up Cloud SDK
+        uses: 'google-github-actions/setup-gcloud@v2'
+
+      - name: Validate bucket permissions
+        run: |
+          gsutil ls -L gs://${{ env.GCS_BUCKET }}/${{ env.GCS_PREFIX }} || {
+            echo "Missing access: grant roles/storage.objectCreator (or Admin) to ${{ steps.auth.outputs.client_email }} on gs://${{ env.GCS_BUCKET }}.";
+            exit 1;
+          }
           
       # 4. Upload the built files to the GCS bucket
       - name: Upload to Google Cloud Storage
@@ -40,7 +57,7 @@ jobs:
           # Your PWA's output directory (where dist/ is generated)
           path: 'dist' 
           # The name of your Google Cloud bucket
-          destination: 'web-visualisations/matuku' 
+          destination: '${{ env.GCS_BUCKET }}/${{ env.GCS_PREFIX }}'
           # Ensures files are served publicly if your bucket policy requires it
           predefinedAcl: 'publicRead' 
           # Overwrite all files in the destination path
