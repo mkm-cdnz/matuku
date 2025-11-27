@@ -79,6 +79,11 @@ export const SetupScreen: React.FC = () => {
                     <Sun size={18} />
                     <span>Sunset: {useSessionStore.getState().sunsetTime || '--:--'}</span>
                 </div>
+                {(locationStatus.startsWith('GPS Error') || locationStatus === 'Geolocation not supported') && (
+                    <p className="text-sm text-amber-300">
+                        GPS did not lock on, but you can still start logging and update coordinates in the CSV later if needed.
+                    </p>
+                )}
             </div>
 
             <div className="space-y-4">
