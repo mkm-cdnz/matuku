@@ -64,12 +64,23 @@ export const generateCsv = (session: SessionData): string => {
 
     // const initialEnv = session.environmentalLogs[0] || {};
 
+    const fallbackEnv = {
+        timestamp: '',
+        noiseLevel: '',
+        windStrength: '',
+        moonVisibility: '',
+        cloudCover: '',
+        rainPresence: '',
+    } as const;
+
     session.boomLogs.forEach(boom => {
         // Find applicable env log (closest before boom)
         // For MVP just use the first one or the last one before boom.
-        const env = session.environmentalLogs.reduce((prev, curr) => {
-            return curr.timestamp <= boom.callTimestamp ? curr : prev;
-        }, session.environmentalLogs[0]);
+        const env = session.environmentalLogs.length
+            ? session.environmentalLogs.reduce((prev, curr) => {
+                return curr.timestamp <= boom.callTimestamp ? curr : prev;
+            }, session.environmentalLogs[0])
+            : fallbackEnv;
 
         const row = [
             session.observerId,

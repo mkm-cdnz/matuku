@@ -7,23 +7,31 @@ import { generateCsv } from '../utils/csvExport';
 
 export const ActiveSessionScreen: React.FC = () => {
     const {
-        boomLogs, addBoomLog, updateBoomLog, deleteBoomLog, endSession
+        boomLogs,
+        addBoomLog,
+        updateBoomLog,
+        deleteBoomLog,
+        endSession,
+        sessionStartTime,
+        sessionDate,
     } = useSessionStore();
 
     const [elapsedTime, setElapsedTime] = useState(0);
     const [editingLogId, setEditingLogId] = useState<string | null>(null);
 
     useEffect(() => {
+        const start = new Date(`${sessionDate}T${sessionStartTime || '00:00:00'}`);
+        const startMs = isNaN(start.getTime()) ? Date.now() : start.getTime();
+
+        const calculateElapsed = () => Math.max(0, Math.floor((Date.now() - startMs) / 1000));
+
+        setElapsedTime(calculateElapsed());
+
         const interval = setInterval(() => {
-            // Simple elapsed time for now, ideally compare with sessionStartTime
-            // But sessionStartTime is a string HH:MM:SS, so we might need a proper Date object in store or just count seconds here for display
-            // For MVP, let's just increment a counter or parse the start time if needed.
-            // Let's just show a countdown from 60 mins based on start time?
-            // For simplicity, I'll just show a timer that runs.
-            setElapsedTime(prev => prev + 1);
+            setElapsedTime(calculateElapsed());
         }, 1000);
         return () => clearInterval(interval);
-    }, []);
+    }, [sessionDate, sessionStartTime]);
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
