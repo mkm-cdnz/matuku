@@ -6,7 +6,8 @@
 
 **Matuku** is a Minimum Viable Product (MVP) of a Progressive Web Application (PWA) designed to replace manual, error-prone field notes for volunteer observers monitoring the endangered Australasian Bittern (Matuku). It ensures compliance with the Department of Conservation (DOC) observation protocols through a structured, mobile-first interface.
 
-## [Try it now!](https://storage.googleapis.com/web-visualisations/matuku/dist/index.html)
+### [initial MVP with minimal features](https://storage.googleapis.com/web-visualisations/matuku/dist/index.html)
+### [WIP MVP with latest features](https://storage.googleapis.com/web-visualisations/matuku/index.html)
 
 ### Project Motivation
 
