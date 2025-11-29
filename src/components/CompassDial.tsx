@@ -42,18 +42,9 @@ export const CompassDial: React.FC<CompassDialProps> = ({ value, onChange, size 
             const x = event.clientX - rect.left - rect.width / 2;
             const y = event.clientY - rect.top - rect.height / 2;
 
-            // 1. Calculate standard Cartesian angle (0 deg = East, CCW)
-            const angleInRad = Math.atan2(y, x);
-            let degrees = (angleInRad * 180) / Math.PI;
+            const normalizedAngle = pointerToHeading(x, y);
 
-            // 2. Correct for Compass Bearings (0 deg = North, Clockwise)
-            // Shift by 90 degrees and reverse rotation
-            degrees = 90 - degrees;
-
-            // 3. Normalize to 0-360 range
-            const normalizedAngle = (degrees + 360) % 360; 
-
-            // 4. Snap and update
+            // Snap and update
             const snapped = snapAngle(normalizedAngle, 10);
             onChange(snapped);
         },
