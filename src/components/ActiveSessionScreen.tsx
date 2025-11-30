@@ -181,10 +181,34 @@ export const ActiveSessionScreen: React.FC = () => {
                         This will export your data to a CSV file and clear the current session.
                     </DialogContentText>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setShowEndDialog(false)}>Cancel</Button>
-                    <Button onClick={handleExport} color="primary" variant="contained" autoFocus>
+                <DialogActions sx={{ flexDirection: 'column', gap: 1, p: 2 }}>
+                    <Button
+                        onClick={handleExport}
+                        color="primary"
+                        variant="contained"
+                        fullWidth
+                        size="large"
+                    >
                         Download & End
+                    </Button>
+                    <Button
+                        onClick={() => {
+                            endSession();
+                            setShowEndDialog(false);
+                        }}
+                        color="error"
+                        variant="outlined"
+                        fullWidth
+                        size="large"
+                    >
+                        Discard & End
+                    </Button>
+                    <Button
+                        onClick={() => setShowEndDialog(false)}
+                        color="inherit"
+                        fullWidth
+                    >
+                        Cancel
                     </Button>
                 </DialogActions>
             </Dialog>
