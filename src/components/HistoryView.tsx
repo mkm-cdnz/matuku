@@ -1,5 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSessionStore } from '../store/sessionStore';
+import { BoomLogForm } from './BoomLogForm';
+import type { BoomLog } from '../types';
+import {
+    Box,
+    Typography,
+    Card,
+    CardContent,
+    List,
+    ListItem,
+    ListItemText,
+    IconButton,
+    Chip,
+    Divider,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions,
+    Button
+} from '@mui/material';
+import { Edit2, Trash2, MapPin, Sun, Calendar, User } from 'lucide-react';
 
 export const HistoryView: React.FC = () => {
     const {
@@ -10,60 +31,169 @@ export const HistoryView: React.FC = () => {
         stationLat,
         stationLon,
         sunsetTime,
+        deleteBoomLog,
+        updateBoomLog,
+        selectBitternId
     } = useSessionStore();
 
+    const [editingLogId, setEditingLogId] = useState<string | null>(null);
+    const [deletingLogId, setDeletingLogId] = useState<string | null>(null);
+
+    const handleSaveLog = (data: Partial<BoomLog>) => {
+        if (editingLogId) {
+            updateBoomLog(editingLogId, data);
+            if (data.bitternId) {
+                selectBitternId(data.bitternId);
+            }
+            setEditingLogId(null);
+        }
+    };
+
+    const confirmDelete = () => {
+        if (deletingLogId) {
+            deleteBoomLog(deletingLogId);
+            setDeletingLogId(null);
+        }
+    };
+
     return (
-        <div className="p-4 space-y-4 max-w-md mx-auto">
-            <div className="bg-slate-800 rounded-lg p-4 border border-slate-700 space-y-1">
-                <h2 className="text-lg font-semibold text-emerald-400">Session Overview</h2>
-                <p className="text-slate-200">Observer: {observerId || 'Not set'}</p>
-                <p className="text-slate-200">Date: {sessionDate}</p>
-                <p className="text-slate-200">Location: {stationLat.toFixed(4)}, {stationLon.toFixed(4)}</p>
-                <p className="text-slate-200">Sunset: {sunsetTime || '--:--'}</p>
-            </div>
+        <Box sx={{ p: 2, maxWidth: 'sm', mx: 'auto', pb: 10 }}>
+            <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold', color: 'primary.main' }}>
+                Session History
+            </Typography>
 
-            <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-                <h3 className="text-md font-semibold text-slate-100 mb-2">Environmental Logs</h3>
-                {environmentalLogs.length === 0 && (
-                    <p className="text-slate-500 text-sm">No environmental logs recorded yet.</p>
-                )}
-                <ul className="space-y-2">
-                    {environmentalLogs.map((env) => (
-                        <li key={env.timestamp} className="bg-slate-900/50 p-3 rounded border border-slate-700 text-sm text-slate-200">
-                            <div className="font-semibold text-white">{env.timestamp}</div>
-                            <div className="grid grid-cols-2 gap-1 text-slate-300 mt-1">
-                                <span>Noise: {env.noiseLevel}</span>
-                                <span>Wind: {env.windStrength}</span>
-                                <span>Moon: {env.moonVisibility}</span>
-                                <span>Cloud: {env.cloudCover}</span>
-                                <span>Rain: {env.rainPresence}</span>
-                            </div>
-                        </li>
-                    ))}
-                </ul>
-            </div>
+            {/* Session Overview Card */}
+            <Card variant="outlined" sx={{ mb: 3, bgcolor: 'background.paper' }}>
+                <CardContent sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <User size={16} className="text-slate-400" />
+                        <Typography variant="body2">{observerId || 'Unknown'}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Calendar size={16} className="text-slate-400" />
+                        <Typography variant="body2">{sessionDate}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <MapPin size={16} className="text-slate-400" />
+                        <Typography variant="body2">{stationLat.toFixed(4)}, {stationLon.toFixed(4)}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Sun size={16} className="text-slate-400" />
+                        <Typography variant="body2">Sunset: {sunsetTime || '--:--'}</Typography>
+                    </Box>
+                </CardContent>
+            </Card>
 
-            <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-                <h3 className="text-md font-semibold text-slate-100 mb-2">Boom Logs</h3>
-                {boomLogs.length === 0 && (
-                    <p className="text-slate-500 text-sm">No boom logs recorded yet.</p>
-                )}
-                <ul className="space-y-2">
-                    {boomLogs.map((boom) => (
-                        <li key={boom.id} className="bg-slate-900/50 p-3 rounded border border-slate-700 text-sm text-slate-200">
-                            <div className="flex justify-between items-center">
-                                <span className="font-semibold text-white">{boom.callTimestamp}</span>
-                                <span className="text-xs text-slate-400">Bittern ID: {boom.bitternId || 'n/a'}</span>
-                            </div>
-                            <div className="grid grid-cols-3 gap-1 mt-1 text-slate-300">
-                                <span>{boom.boomCount} booms</span>
-                                <span>{boom.compassBearing}°</span>
-                                <span>{boom.estDistanceM} m</span>
-                            </div>
-                        </li>
+            {/* Boom Logs Section */}
+            <Typography variant="h6" sx={{ mb: 1, color: 'text.secondary' }}>
+                Boom Logs ({boomLogs.length})
+            </Typography>
+
+            {boomLogs.length === 0 ? (
+                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', mb: 3 }}>
+                    No booms logged yet.
+                </Typography>
+            ) : (
+                <List sx={{ bgcolor: 'background.paper', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+                    {boomLogs.map((log, index) => (
+                        <React.Fragment key={log.id}>
+                            {index > 0 && <Divider component="li" />}
+                            <ListItem
+                                secondaryAction={
+                                    <Box>
+                                        <IconButton edge="end" aria-label="edit" onClick={() => setEditingLogId(log.id)} sx={{ mr: 1 }}>
+                                            <Edit2 size={18} />
+                                        </IconButton>
+                                        <IconButton edge="end" aria-label="delete" onClick={() => setDeletingLogId(log.id)} color="error">
+                                            <Trash2 size={18} />
+                                        </IconButton>
+                                    </Box>
+                                }
+                            >
+                                <ListItemText
+                                    primary={
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Typography variant="subtitle1" fontWeight="bold">
+                                                {log.callTimestamp}
+                                            </Typography>
+                                            <Chip
+                                                label={log.bitternId}
+                                                size="small"
+                                                color="primary"
+                                                variant="outlined"
+                                                sx={{ height: 20, fontSize: '0.7rem' }}
+                                            />
+                                        </Box>
+                                    }
+                                    secondary={
+                                        <Typography variant="body2" color="text.secondary">
+                                            {log.boomCount} booms • {log.compassBearing}° • {log.estDistanceM}m
+                                        </Typography>
+                                    }
+                                />
+                            </ListItem>
+                        </React.Fragment>
                     ))}
-                </ul>
-            </div>
-        </div>
+                </List>
+            )}
+
+            {/* Environmental Logs Section */}
+            <Typography variant="h6" sx={{ mt: 3, mb: 1, color: 'text.secondary' }}>
+                Environmental Logs
+            </Typography>
+            <List sx={{ bgcolor: 'background.paper', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+                {environmentalLogs.map((env, index) => (
+                    <React.Fragment key={env.timestamp}>
+                        {index > 0 && <Divider component="li" />}
+                        <ListItem>
+                            <ListItemText
+                                primary={
+                                    <Typography variant="subtitle2" color="primary.main">
+                                        {env.timestamp}
+                                    </Typography>
+                                }
+                                secondary={
+                                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0.5, mt: 0.5 }}>
+                                        <Typography variant="caption">Noise: {env.noiseLevel}</Typography>
+                                        <Typography variant="caption">Wind: {env.windStrength}</Typography>
+                                        <Typography variant="caption">Moon: {env.moonVisibility}</Typography>
+                                        <Typography variant="caption">Cloud: {env.cloudCover}</Typography>
+                                        <Typography variant="caption">Rain: {env.rainPresence}</Typography>
+                                    </Box>
+                                }
+                            />
+                        </ListItem>
+                    </React.Fragment>
+                ))}
+            </List>
+
+            {/* Edit Dialog */}
+            {editingLogId && (
+                <BoomLogForm
+                    initialData={boomLogs.find(l => l.id === editingLogId)}
+                    onSubmit={handleSaveLog}
+                    onCancel={() => setEditingLogId(null)}
+                />
+            )}
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+                open={!!deletingLogId}
+                onClose={() => setDeletingLogId(null)}
+            >
+                <DialogTitle>Delete Log?</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to delete this boom log? This action cannot be undone.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDeletingLogId(null)}>Cancel</Button>
+                    <Button onClick={confirmDelete} color="error" autoFocus>
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </Box>
     );
 };

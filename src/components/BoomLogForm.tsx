@@ -1,8 +1,18 @@
 import React, { useMemo, useState } from 'react';
 import type { BoomLog } from '../types';
-import { Compass, Ruler, Hash, Bird, PlusCircle } from 'lucide-react';
+import { Compass, Ruler, Hash, Bird, PlusCircle, X, Check } from 'lucide-react';
 import { CompassDial, getDirectionLabel } from './CompassDial';
 import { useSessionStore } from '../store/sessionStore';
+import {
+    Dialog,
+    Button,
+    Typography,
+    Box,
+    Slider,
+    Chip,
+    IconButton,
+    Paper
+} from '@mui/material';
 
 interface BoomLogFormProps {
     initialData?: Partial<BoomLog>;
@@ -10,16 +20,19 @@ interface BoomLogFormProps {
     onCancel: () => void;
 }
 
+const DISTANCE_STOPS = [0, 10, 25, 50, 100, 200, 500, 1000, 1500];
+
 export const BoomLogForm: React.FC<BoomLogFormProps> = ({ initialData, onSubmit, onCancel }) => {
     const {
         bitternIds,
         nextBitternId,
         lastSelectedBitternId,
         selectBitternId,
-        boomLogs,
     } = useSessionStore();
 
-    const defaultBitternId = initialData?.bitternId || lastSelectedBitternId || bitternIds[bitternIds.length - 1] || `B${Math.max(1, nextBitternId)}`;
+    // Default to sticky ID if available, otherwise new ID logic
+    const defaultBitternId = initialData?.bitternId || lastSelectedBitternId || (bitternIds.length > 0 ? bitternIds[bitternIds.length - 1] : `B${Math.max(1, nextBitternId)}`);
+
     const [boomCount, setBoomCount] = useState(initialData?.boomCount || 1);
     const [compassBearing, setCompassBearing] = useState(initialData?.compassBearing || 0);
     const [estDistanceM, setEstDistanceM] = useState(initialData?.estDistanceM || 100);
@@ -41,16 +54,6 @@ export const BoomLogForm: React.FC<BoomLogFormProps> = ({ initialData, onSubmit,
         });
     }, [bitternId, bitternIds]);
 
-    const bitternDirections = useMemo(() => {
-        const latestForId: Record<string, number> = {};
-        boomLogs.forEach((log) => {
-            if (log.bitternId && latestForId[log.bitternId] === undefined) {
-                latestForId[log.bitternId] = log.compassBearing;
-            }
-        });
-        return latestForId;
-    }, [boomLogs]);
-
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSubmit({
@@ -61,158 +64,167 @@ export const BoomLogForm: React.FC<BoomLogFormProps> = ({ initialData, onSubmit,
         });
     };
 
+    // Find the closest index for the current distance
+    const currentDistanceIndex = DISTANCE_STOPS.reduce((prev, curr, index) => {
+        return Math.abs(curr - estDistanceM) < Math.abs(DISTANCE_STOPS[prev] - estDistanceM) ? index : prev;
+    }, 0);
+
+    const handleDistanceChange = (_: Event, newValue: number | number[]) => {
+        const index = newValue as number;
+        setEstDistanceM(DISTANCE_STOPS[index]);
+    };
+
+    const createNewBird = () => {
+        const highest = bitternIds.reduce((max, id) => {
+            const match = id.match(/B(\d+)/i);
+            return Math.max(max, match ? parseInt(match[1], 10) : 0);
+        }, 0);
+        const nextId = `B${Math.max(highest + 1, nextBitternId)}`;
+        handleSelectBittern(nextId);
+    };
+
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-            <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-700 rounded-xl p-6 w-full max-w-2xl space-y-6">
-                <h2 className="text-xl font-bold text-white mb-4">Log Boom Details</h2>
+        <Dialog
+            open={true}
+            onClose={onCancel}
+            fullScreen
+            PaperProps={{ sx: { bgcolor: 'background.default' } }}
+        >
+            <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Typography variant="h5" fontWeight="bold" color="primary">Log Boom</Typography>
+                    <IconButton onClick={onCancel} edge="end" color="inherit">
+                        <X />
+                    </IconButton>
+                </Box>
 
-                {/* Boom Count */}
-                <div className="space-y-2">
-                    <div className="flex items-center justify-between text-slate-300 font-medium">
-                        <div className="flex items-center gap-2">
-                            <Hash size={18} /> <span>Boom Count</span>
-                        </div>
-                        <span className="text-xs text-slate-500">Tap or hold for haptic-like feedback</span>
-                    </div>
-                    <div className="flex items-center gap-4 justify-between">
-                        <button
-                            type="button"
-                            onClick={() => setBoomCount(Math.max(1, boomCount - 1))}
-                            className="w-16 h-16 rounded-full bg-slate-800 border border-slate-600 text-3xl text-white flex items-center justify-center active:bg-slate-700 active:translate-y-0.5 active:scale-95 shadow-lg shadow-black/30"
-                        >
-                            -
-                        </button>
-                        <span className="text-4xl font-bold text-white w-16 text-center">{boomCount}</span>
-                        <button
-                            type="button"
-                            onClick={() => setBoomCount(boomCount + 1)}
-                            className="w-16 h-16 rounded-full bg-slate-800 border border-slate-600 text-3xl text-white flex items-center justify-center active:bg-slate-700 active:translate-y-0.5 active:scale-95 shadow-lg shadow-black/30"
-                        >
-                            +
-                        </button>
-                    </div>
-                </div>
+                <Box sx={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4, pb: 4 }}>
 
-                {/* Bearing */}
-                <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-slate-300 font-medium">
-                        <Compass size={18} /> Bearing (Degrees)
-                    </label>
-                    <div className="grid lg:grid-cols-2 gap-4">
-                        <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-3">
+                    {/* Boom Count */}
+                    <Paper variant="outlined" sx={{ p: 2, bgcolor: 'background.paper' }}>
+                        <Typography variant="subtitle2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                            <Hash size={16} /> BOOM COUNT
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2 }}>
+                            <Button
+                                variant="outlined"
+                                sx={{ borderRadius: '50%', minWidth: 64, height: 64, fontSize: '1.5rem' }}
+                                onClick={() => setBoomCount(Math.max(1, boomCount - 1))}
+                            >
+                                -
+                            </Button>
+                            <Typography variant="h2" fontWeight="bold">{boomCount}</Typography>
+                            <Button
+                                variant="outlined"
+                                sx={{ borderRadius: '50%', minWidth: 64, height: 64, fontSize: '1.5rem' }}
+                                onClick={() => setBoomCount(boomCount + 1)}
+                            >
+                                +
+                            </Button>
+                        </Box>
+                    </Paper>
+
+                    {/* Compass */}
+                    <Paper variant="outlined" sx={{ p: 2, bgcolor: 'background.paper' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                            <Typography variant="subtitle2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Compass size={16} /> BEARING
+                            </Typography>
+                            <Typography variant="h6" color="primary" fontWeight="bold">
+                                {compassBearing}° <Typography component="span" variant="body2" color="text.secondary">({getDirectionLabel(compassBearing)})</Typography>
+                            </Typography>
+                        </Box>
+
+                        {/* Touch Action None Wrapper */}
+                        <Box sx={{ touchAction: 'none', display: 'flex', justifyContent: 'center', py: 2 }}>
                             <CompassDial value={compassBearing} onChange={setCompassBearing} />
-                        </div>
-                        <div className="flex flex-col justify-between gap-4">
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between text-slate-300">
-                                    <span className="font-medium">Selected</span>
-                                    <span className="text-sm text-indigo-200 font-semibold">{getDirectionLabel(compassBearing)}</span>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <input
-                                        type="number"
-                                        min={0}
-                                        max={360}
-                                        step={10}
-                                        value={compassBearing}
-                                        onChange={(e) => setCompassBearing(Math.min(360, Math.max(0, Number(e.target.value))))}
-                                        className="w-28 bg-slate-800 border border-slate-700 rounded p-2 text-white text-center"
-                                    />
-                                    <span className="text-slate-400">degrees</span>
-                                </div>
-                            </div>
-                            <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-3 text-sm text-slate-300">
-                                <p className="font-semibold text-slate-200 mb-1">Compass dial tips</p>
-                                <ul className="list-disc list-inside space-y-1 text-slate-400">
-                                    <li>Drag the red handle or tap the dial to snap to 10° increments.</li>
-                                    <li>Arrow keys nudge by 10° when focused.</li>
-                                    <li>Cardinal/intercardinal labels update for nearby values.</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                        </Box>
+                    </Paper>
 
-                {/* Distance */}
-                <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-slate-300 font-medium">
-                        <Ruler size={18} /> Est. Distance (m)
-                    </label>
-                    <input
-                        type="number"
-                        value={estDistanceM}
-                        onChange={(e) => setEstDistanceM(Number(e.target.value))}
-                        className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white"
-                        step="10"
-                    />
-                </div>
+                    {/* Distance */}
+                    <Paper variant="outlined" sx={{ p: 2, bgcolor: 'background.paper' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                            <Typography variant="subtitle2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Ruler size={16} /> DISTANCE
+                            </Typography>
+                            <Typography variant="h6" color="primary" fontWeight="bold">
+                                {estDistanceM >= 1500 ? '>1000' : estDistanceM}m
+                            </Typography>
+                        </Box>
+                        <Box sx={{ px: 2 }}>
+                            <Slider
+                                value={currentDistanceIndex}
+                                min={0}
+                                max={DISTANCE_STOPS.length - 1}
+                                step={1}
+                                marks={DISTANCE_STOPS.map((val, idx) => ({
+                                    value: idx,
+                                    label: idx % 2 === 0 ? (val >= 1500 ? '>1km' : `${val}m`) : '' // Show every other label to avoid crowding
+                                }))}
+                                onChange={handleDistanceChange}
+                                valueLabelFormat={(idx) => {
+                                    const val = DISTANCE_STOPS[idx];
+                                    return val >= 1500 ? '>1000m' : `${val}m`;
+                                }}
+                                valueLabelDisplay="auto"
+                            />
+                        </Box>
+                    </Paper>
 
-                {/* Bittern ID */}
-                <div className="space-y-3">
-                    <div className="flex items-center justify-between text-slate-300 font-medium">
-                        <div className="flex items-center gap-2">
-                            <Bird size={18} /> Bittern ID
-                        </div>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                const highest = bitternIds.reduce((max, id) => {
-                                    const match = id.match(/B(\d+)/i);
-                                    return Math.max(max, match ? parseInt(match[1], 10) : 0);
-                                }, 0);
-                                const nextId = `B${Math.max(highest + 1, nextBitternId)}`;
-                                handleSelectBittern(nextId);
-                            }}
-                            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800 text-emerald-200 border border-slate-700 hover:bg-slate-700"
-                        >
-                            <PlusCircle size={16} /> New bird
-                        </button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        {availableBitterns.map((id) => {
-                            const direction = bitternDirections[id];
-                            return (
-                                <button
+                    {/* Bittern ID */}
+                    <Paper variant="outlined" sx={{ p: 2, bgcolor: 'background.paper' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                            <Typography variant="subtitle2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Bird size={16} /> BITTERN ID
+                            </Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                            {availableBitterns.map((id) => (
+                                <Chip
                                     key={id}
-                                    type="button"
+                                    label={id}
                                     onClick={() => handleSelectBittern(id)}
-                                    className={`px-3 py-2 rounded-full border text-sm flex items-center gap-2 transition ${
-                                        bitternId === id
-                                            ? 'bg-emerald-600/20 text-emerald-200 border-emerald-500'
-                                            : 'bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700'
-                                    }`}
-                                >
-                                    <span className="font-semibold">{id}</span>
-                                    <span className="text-xs text-slate-400">({direction ? getDirectionLabel(direction) : '—'})</span>
-                                </button>
-                            );
-                        })}
-                    </div>
-                    <input
-                        type="text"
-                        value={bitternId}
-                        onChange={(e) => handleSelectBittern(e.target.value)}
-                        className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white"
-                        placeholder="e.g. B1"
-                    />
-                </div>
+                                    color={bitternId === id ? "primary" : "default"}
+                                    variant={bitternId === id ? "filled" : "outlined"}
+                                    sx={{ minWidth: 60 }}
+                                />
+                            ))}
+                            <Chip
+                                icon={<PlusCircle size={16} />}
+                                label="New Bird"
+                                onClick={createNewBird}
+                                color="secondary"
+                                variant="outlined"
+                                sx={{ borderStyle: 'dashed' }}
+                            />
+                        </Box>
+                    </Paper>
+                </Box>
 
-                <div className="flex gap-3 pt-4">
-                    <button
-                        type="button"
+                <Box sx={{ pt: 2, display: 'flex', gap: 2 }}>
+                    <Button
+                        fullWidth
+                        variant="outlined"
+                        color="inherit"
+                        size="large"
                         onClick={onCancel}
-                        className="flex-1 py-3 px-4 rounded-lg border border-slate-600 text-slate-300 font-medium hover:bg-slate-800"
+                        sx={{ height: 56 }}
                     >
                         Cancel
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                        fullWidth
+                        variant="contained"
+                        color="primary"
+                        size="large"
                         type="submit"
-                        className="flex-1 py-3 px-4 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700"
+                        startIcon={<Check />}
+                        sx={{ height: 56, fontSize: '1.1rem' }}
                     >
                         Save Log
-                    </button>
-                </div>
-            </form>
-        </div>
+                    </Button>
+                </Box>
+            </Box>
+        </Dialog>
     );
 };

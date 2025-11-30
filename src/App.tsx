@@ -1,68 +1,65 @@
-import { useEffect, useState } from 'react';
-import { useSessionStore } from './store/sessionStore';
+import { useState, useEffect } from 'react';
+import { ThemeProvider, CssBaseline, BottomNavigation, BottomNavigationAction, Paper, Box } from '@mui/material';
+import { theme } from './theme';
 import { SetupScreen } from './components/SetupScreen';
 import { ActiveSessionScreen } from './components/ActiveSessionScreen';
 import { HistoryView } from './components/HistoryView';
-import { RecentLogsView } from './components/RecentLogsView';
+import { useSessionStore } from './store/sessionStore';
+import { Loader2, Mic, History } from 'lucide-react';
 
 function App() {
   const status = useSessionStore((state) => state.status);
-  const resetSession = useSessionStore((state) => state.resetSession);
-  const [tab, setTab] = useState<'log' | 'recent' | 'history'>('log');
+  const [showSplash, setShowSplash] = useState(true);
+  const [tab, setTab] = useState(0);
 
-  // Force dark mode
   useEffect(() => {
-    document.documentElement.classList.add('dark');
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2000);
+    return () => clearTimeout(timer);
   }, []);
 
-  if (status === 'FINISHED') {
+  if (showSplash) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen p-4 text-center space-y-6">
-        <h1 className="text-3xl font-bold text-emerald-400">Session Complete</h1>
-        <p className="text-slate-300">Data has been exported.</p>
-        <button
-          onClick={resetSession}
-          className="bg-emerald-600 text-white px-6 py-3 rounded-lg font-bold"
-        >
-          Start New Session
-        </button>
-      </div>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
+          <div className="text-center space-y-4 animate-in fade-in duration-700">
+            <h1 className="text-4xl font-bold text-emerald-500 tracking-tight">Matuku</h1>
+            <p className="text-slate-400 text-lg">Australasian Bittern Field Logger</p>
+            <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mx-auto mt-8" />
+          </div>
+        </div>
+      </ThemeProvider>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      {/* Tab navigation */}
-      <nav className="flex justify-center space-x-4 bg-slate-800 p-2">
-        <button
-          onClick={() => setTab('log')}
-          className={`px-4 py-2 rounded ${tab === 'log' ? 'bg-emerald-600' : 'bg-slate-600'} transition`}
-        >
-          Log
-        </button>
-        <button
-          onClick={() => setTab('recent')}
-          className={`px-4 py-2 rounded ${tab === 'recent' ? 'bg-emerald-600' : 'bg-slate-600'} transition`}
-        >
-          Recent Logs
-        </button>
-        <button
-          onClick={() => setTab('history')}
-          className={`px-4 py-2 rounded ${tab === 'history' ? 'bg-emerald-600' : 'bg-slate-600'} transition`}
-        >
-          History
-        </button>
-      </nav>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box sx={{ pb: 7, minHeight: '100vh', bgcolor: 'background.default' }}>
+        {status === 'SETUP' ? (
+          <SetupScreen />
+        ) : (
+          <>
+            {tab === 0 && <ActiveSessionScreen />}
+            {tab === 1 && <HistoryView />}
 
-      {status === 'SETUP' && <SetupScreen />}
-      {status === 'ACTIVE' && (
-        <>
-          {tab === 'log' && <ActiveSessionScreen onShowRecent={() => setTab('recent')} />}
-          {tab === 'recent' && <RecentLogsView />}
-          {tab === 'history' && <HistoryView />}
-        </>
-      )}
-    </div>
+            <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000 }} elevation={3}>
+              <BottomNavigation
+                showLabels
+                value={tab}
+                onChange={(_, newValue) => setTab(newValue)}
+                sx={{ bgcolor: 'background.paper', borderTop: '1px solid rgba(255,255,255,0.1)' }}
+              >
+                <BottomNavigationAction label="Log" icon={<Mic />} />
+                <BottomNavigationAction label="History" icon={<History />} />
+              </BottomNavigation>
+            </Paper>
+          </>
+        )}
+      </Box>
+    </ThemeProvider>
   );
 }
 

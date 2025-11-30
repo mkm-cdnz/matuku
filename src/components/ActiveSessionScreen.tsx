@@ -4,12 +4,21 @@ import { BoomLogForm } from './BoomLogForm';
 import type { BoomLog } from '../types';
 import { Clock, Mic } from 'lucide-react';
 import { generateCsv } from '../utils/csvExport';
+import {
+    Box,
+    Typography,
+    Button,
+    Fab,
+    Card,
+    CardContent,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions
+} from '@mui/material';
 
-type ActiveSessionScreenProps = {
-    onShowRecent?: () => void;
-};
-
-export const ActiveSessionScreen: React.FC<ActiveSessionScreenProps> = ({ onShowRecent }) => {
+export const ActiveSessionScreen: React.FC = () => {
     const {
         boomLogs,
         addBoomLog,
@@ -25,18 +34,14 @@ export const ActiveSessionScreen: React.FC<ActiveSessionScreenProps> = ({ onShow
 
     const [elapsedTime, setElapsedTime] = useState(0);
     const [editingLogId, setEditingLogId] = useState<string | null>(null);
+    const [showEndDialog, setShowEndDialog] = useState(false);
 
     useEffect(() => {
         const start = new Date(`${sessionDate}T${sessionStartTime || '00:00:00'}`);
         const startMs = isNaN(start.getTime()) ? Date.now() : start.getTime();
-
         const calculateElapsed = () => Math.max(0, Math.floor((Date.now() - startMs) / 1000));
-
         setElapsedTime(calculateElapsed());
-
-        const interval = setInterval(() => {
-            setElapsedTime(calculateElapsed());
-        }, 1000);
+        const interval = setInterval(() => setElapsedTime(calculateElapsed()), 1000);
         return () => clearInterval(interval);
     }, [sessionDate, sessionStartTime]);
 
@@ -57,12 +62,17 @@ export const ActiveSessionScreen: React.FC<ActiveSessionScreenProps> = ({ onShow
         const timestamp = now.toLocaleTimeString('en-GB', { hour12: false });
         const defaultBitternId = resolveDefaultBitternId();
         selectBitternId(defaultBitternId);
+
+        // Sticky logic: try to find the last log to copy bearing/distance from
+        const lastLog = boomLogs[0]; // boomLogs is usually sorted newest first? Check store.
+        // Assuming boomLogs[0] is the latest. 
+
         const newLog: BoomLog = {
             id: crypto.randomUUID(),
             callTimestamp: timestamp,
             boomCount: 1,
-            compassBearing: 0,
-            estDistanceM: 100,
+            compassBearing: lastLog ? lastLog.compassBearing : 0,
+            estDistanceM: lastLog ? lastLog.estDistanceM : 100,
             bitternId: defaultBitternId,
         };
         addBoomLog(newLog);
@@ -91,63 +101,93 @@ export const ActiveSessionScreen: React.FC<ActiveSessionScreenProps> = ({ onShow
     };
 
     return (
-        <div className="p-4 flex flex-col h-screen max-w-md mx-auto">
-            <div className="flex justify-between items-center mb-4">
-                <div className="flex items-center gap-2 text-emerald-400">
+        <Box sx={{ p: 2, maxWidth: 'sm', mx: 'auto', display: 'flex', flexDirection: 'column', height: '100%' }}>
+            {/* Header */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'primary.main' }}>
                     <Clock size={20} />
-                    <span className="text-xl font-mono font-bold">{formatTime(elapsedTime)}</span>
-                </div>
-                <button
-                    onClick={handleExport}
-                    className="bg-slate-800 text-slate-300 px-3 py-1 rounded border border-slate-700 text-sm"
+                    <Typography variant="h5" component="span" sx={{ fontFamily: 'monospace', fontWeight: 'bold' }}>
+                        {formatTime(elapsedTime)}
+                    </Typography>
+                </Box>
+                <Button
+                    variant="outlined"
+                    color="error"
+                    size="small"
+                    onClick={() => setShowEndDialog(true)}
                 >
-                    End & Export
-                </button>
-            </div>
+                    End Session
+                </Button>
+            </Box>
 
-            <button
-                onClick={handleLogBoom}
-                className="w-full aspect-square rounded-full bg-emerald-600 hover:bg-emerald-500 active:scale-95 transition-all flex flex-col items-center justify-center shadow-lg shadow-emerald-900/50 mb-6"
-            >
-                <Mic size={64} className="text-white mb-2" />
-                <span className="text-2xl font-bold text-white">LOG BOOM</span>
-                <span className="text-emerald-200 text-sm">Tap immediately</span>
-            </button>
+            {/* Main Action Area */}
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                <Fab
+                    color="primary"
+                    aria-label="log boom"
+                    onClick={handleLogBoom}
+                    sx={{ width: 120, height: 120, '& .MuiSvgIcon-root': { fontSize: 48 } }}
+                >
+                    <Mic size={48} />
+                </Fab>
+                <Typography variant="h6" color="text.secondary">
+                    Tap to Log Boom
+                </Typography>
+            </Box>
 
-            <div className="flex-1 flex flex-col gap-4">
-                <div className="bg-slate-900/60 rounded-xl border border-slate-800 p-4 text-center shadow-inner">
-                    <p className="text-slate-200 text-lg font-semibold">Recent Logs</p>
-                    <p className="text-slate-500 text-sm mt-1">Open the Recent Logs tab to review, edit, or delete entries.</p>
-                    <button
-                        onClick={onShowRecent}
-                        className="mt-3 inline-flex items-center justify-center px-4 py-2 rounded-lg bg-slate-800 text-emerald-200 border border-slate-700 hover:bg-slate-700 transition"
-                    >
-                        Go to Recent Logs
-                    </button>
-                </div>
-
-                <div className="bg-slate-900/60 rounded-xl border border-slate-800 p-4">
-                    <h4 className="text-slate-300 font-semibold mb-2">Latest entry</h4>
-                    {boomLogs.length === 0 ? (
-                        <p className="text-slate-600 text-sm">No booms logged yet.</p>
-                    ) : (
-                        <div className="flex items-center justify-between text-slate-200 bg-slate-800 rounded-lg p-3">
-                            <div>
-                                <div className="text-lg font-bold text-white">{boomLogs[0].callTimestamp}</div>
-                                <div className="text-slate-400 text-sm">
+            {/* Latest Entry Preview */}
+            <Box sx={{ mt: 'auto', mb: 2 }}>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                    Latest Entry
+                </Typography>
+                {boomLogs.length === 0 ? (
+                    <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                        No booms logged yet.
+                    </Typography>
+                ) : (
+                    <Card variant="outlined" sx={{ bgcolor: 'background.paper' }}>
+                        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 }, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Box>
+                                <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
+                                    {boomLogs[0].callTimestamp}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
                                     {boomLogs[0].boomCount} booms • {boomLogs[0].compassBearing}° • {boomLogs[0].estDistanceM}m
-                                </div>
-                            </div>
-                            <button
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 'bold' }}>
+                                    {boomLogs[0].bitternId}
+                                </Typography>
+                            </Box>
+                            <Button
+                                variant="outlined"
+                                size="small"
                                 onClick={() => setEditingLogId(boomLogs[0].id)}
-                                className="px-3 py-2 rounded-lg bg-slate-700 text-slate-100 hover:bg-slate-600"
                             >
                                 Edit
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </div>
+                            </Button>
+                        </CardContent>
+                    </Card>
+                )}
+            </Box>
+
+            {/* End Session Dialog */}
+            <Dialog
+                open={showEndDialog}
+                onClose={() => setShowEndDialog(false)}
+            >
+                <DialogTitle>End Session?</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        This will export your data to a CSV file and clear the current session.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setShowEndDialog(false)}>Cancel</Button>
+                    <Button onClick={handleExport} color="primary" variant="contained" autoFocus>
+                        Download & End
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             {editingLogId && (
                 <BoomLogForm
@@ -156,6 +196,6 @@ export const ActiveSessionScreen: React.FC<ActiveSessionScreenProps> = ({ onShow
                     onCancel={() => setEditingLogId(null)}
                 />
             )}
-        </div>
+        </Box>
     );
 };

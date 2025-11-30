@@ -3,6 +3,17 @@ import { useSessionStore } from '../store/sessionStore';
 import SunCalc from 'suncalc';
 import type { EnvironmentalData } from '../types';
 import { MapPin, Sun } from 'lucide-react';
+import {
+    Box,
+    Typography,
+    TextField,
+    Button,
+    Paper,
+    ToggleButton,
+    ToggleButtonGroup,
+    Stack,
+    Alert
+} from '@mui/material';
 
 export const SetupScreen: React.FC = () => {
     const {
@@ -20,6 +31,7 @@ export const SetupScreen: React.FC = () => {
     });
 
     const [locationStatus, setLocationStatus] = useState<string>('Waiting for GPS...');
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (navigator.geolocation) {
@@ -43,8 +55,8 @@ export const SetupScreen: React.FC = () => {
     }, [setLocation, setSunsetTime]);
 
     const handleStart = () => {
-        if (!observerId) {
-            alert('Please enter Observer ID');
+        if (!observerId.trim()) {
+            setError('Please enter your Observer ID');
             return;
         }
 
@@ -55,112 +67,156 @@ export const SetupScreen: React.FC = () => {
         startSession();
     };
 
-    return (
-        <div className="p-4 space-y-6 max-w-md mx-auto">
-            <h1 className="text-2xl font-bold text-emerald-400">Session Setup</h1>
+    const handleEnvChange = (field: keyof typeof envData) => (
+        _: React.MouseEvent<HTMLElement>,
+        newValue: string | null
+    ) => {
+        if (newValue !== null) {
+            setEnvData(prev => ({ ...prev, [field]: newValue }));
+        }
+    };
 
-            <div className="space-y-2">
-                <label className="block text-sm font-medium text-slate-300">Observer ID</label>
-                <input
-                    type="text"
+    return (
+        <Box sx={{ p: 3, maxWidth: 'sm', mx: 'auto', pb: 10 }}>
+            <Typography variant="h4" fontWeight="bold" color="primary" sx={{ mb: 4 }}>
+                Session Setup
+            </Typography>
+
+            <Stack spacing={4}>
+                {/* Observer ID */}
+                <TextField
+                    label="Observer ID"
+                    variant="outlined"
+                    fullWidth
                     value={observerId}
-                    onChange={(e) => setObserverId(e.target.value)}
-                    className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white"
+                    onChange={(e) => {
+                        setObserverId(e.target.value);
+                        setError(null);
+                    }}
+                    error={!!error}
+                    helperText={error}
                     placeholder="Enter your name"
                 />
-            </div>
 
-            <div className="bg-slate-800 p-4 rounded-lg space-y-2">
-                <div className="flex items-center gap-2 text-slate-300">
-                    <MapPin size={18} />
-                    <span>{locationStatus}</span>
-                </div>
-                <div className="flex items-center gap-2 text-slate-300">
-                    <Sun size={18} />
-                    <span>Sunset: {useSessionStore.getState().sunsetTime || '--:--'}</span>
-                </div>
-                {(locationStatus.startsWith('GPS Error') || locationStatus === 'Geolocation not supported') && (
-                    <p className="text-sm text-amber-300">
-                        GPS did not lock on, but you can still start logging and update coordinates in the CSV later if needed.
-                    </p>
-                )}
-            </div>
+                {/* Location Status */}
+                <Paper variant="outlined" sx={{ p: 2, bgcolor: 'background.paper' }}>
+                    <Stack spacing={1}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary' }}>
+                            <MapPin size={18} />
+                            <Typography variant="body2">{locationStatus}</Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary' }}>
+                            <Sun size={18} />
+                            <Typography variant="body2">Sunset: {useSessionStore.getState().sunsetTime || '--:--'}</Typography>
+                        </Box>
+                        {(locationStatus.startsWith('GPS Error') || locationStatus === 'Geolocation not supported') && (
+                            <Alert severity="warning" sx={{ mt: 1 }}>
+                                GPS issue detected. You can still log data.
+                            </Alert>
+                        )}
+                    </Stack>
+                </Paper>
 
-            <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-slate-200">Environmental Conditions</h2>
+                {/* Environmental Conditions */}
+                <Box>
+                    <Typography variant="h6" sx={{ mb: 2 }}>Environmental Conditions</Typography>
+                    <Stack spacing={3}>
 
-                <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-1">Noise Level</label>
-                    <select
-                        value={envData.noiseLevel}
-                        onChange={(e) => setEnvData({ ...envData, noiseLevel: e.target.value as any })}
-                        className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white"
-                    >
-                        <option value="Low">Low</option>
-                        <option value="Medium">Medium (Faraway calls may be missed)</option>
-                        <option value="High">High</option>
-                    </select>
-                </div>
+                        <Box>
+                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>Noise Level</Typography>
+                            <ToggleButtonGroup
+                                value={envData.noiseLevel}
+                                exclusive
+                                onChange={handleEnvChange('noiseLevel')}
+                                fullWidth
+                                size="small"
+                                color="primary"
+                            >
+                                <ToggleButton value="Low">Low</ToggleButton>
+                                <ToggleButton value="Medium">Medium</ToggleButton>
+                                <ToggleButton value="High">High</ToggleButton>
+                            </ToggleButtonGroup>
+                        </Box>
 
-                <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-1">Wind Strength</label>
-                    <select
-                        value={envData.windStrength}
-                        onChange={(e) => setEnvData({ ...envData, windStrength: e.target.value as any })}
-                        className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white"
-                    >
-                        <option value="Calm">Calm</option>
-                        <option value="Light">Light</option>
-                        <option value="Moderate">Moderate</option>
-                        <option value="Strong">Strong</option>
-                    </select>
-                </div>
+                        <Box>
+                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>Wind Strength</Typography>
+                            <ToggleButtonGroup
+                                value={envData.windStrength}
+                                exclusive
+                                onChange={handleEnvChange('windStrength')}
+                                fullWidth
+                                size="small"
+                                color="primary"
+                                sx={{ display: 'flex', flexWrap: 'wrap' }}
+                            >
+                                <ToggleButton value="Calm" sx={{ flex: 1 }}>Calm</ToggleButton>
+                                <ToggleButton value="Light" sx={{ flex: 1 }}>Light</ToggleButton>
+                                <ToggleButton value="Moderate" sx={{ flex: 1 }}>Mod</ToggleButton>
+                                <ToggleButton value="Strong" sx={{ flex: 1 }}>Strong</ToggleButton>
+                            </ToggleButtonGroup>
+                        </Box>
 
-                <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-1">Moon Visibility</label>
-                    <select
-                        value={envData.moonVisibility}
-                        onChange={(e) => setEnvData({ ...envData, moonVisibility: e.target.value as any })}
-                        className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white"
-                    >
-                        <option value="Visible">Visible</option>
-                        <option value="Not Visible">Not Visible</option>
-                    </select>
-                </div>
+                        <Box>
+                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>Moon Visibility</Typography>
+                            <ToggleButtonGroup
+                                value={envData.moonVisibility}
+                                exclusive
+                                onChange={handleEnvChange('moonVisibility')}
+                                fullWidth
+                                size="small"
+                                color="primary"
+                            >
+                                <ToggleButton value="Visible">Visible</ToggleButton>
+                                <ToggleButton value="Not Visible">Not Visible</ToggleButton>
+                            </ToggleButtonGroup>
+                        </Box>
 
-                <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-1">Cloud Cover</label>
-                    <select
-                        value={envData.cloudCover}
-                        onChange={(e) => setEnvData({ ...envData, cloudCover: e.target.value as any })}
-                        className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white"
-                    >
-                        <option value="Clear (0-25%)">Clear (0-25%)</option>
-                        <option value="Partially Cloudy (25-75%)">Partially Cloudy (25-75%)</option>
-                        <option value="Overcast (75-100%)">Overcast (75-100%)</option>
-                    </select>
-                </div>
+                        <Box>
+                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>Cloud Cover</Typography>
+                            <ToggleButtonGroup
+                                value={envData.cloudCover}
+                                exclusive
+                                onChange={handleEnvChange('cloudCover')}
+                                fullWidth
+                                size="small"
+                                color="primary"
+                                orientation="vertical"
+                            >
+                                <ToggleButton value="Clear (0-25%)">Clear (0-25%)</ToggleButton>
+                                <ToggleButton value="Partially Cloudy (25-75%)">Partially Cloudy (25-75%)</ToggleButton>
+                                <ToggleButton value="Overcast (75-100%)">Overcast (75-100%)</ToggleButton>
+                            </ToggleButtonGroup>
+                        </Box>
 
-                <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-1">Rain Presence</label>
-                    <select
-                        value={envData.rainPresence}
-                        onChange={(e) => setEnvData({ ...envData, rainPresence: e.target.value as any })}
-                        className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white"
-                    >
-                        <option value="No Rain">No Rain</option>
-                        <option value="Light Drizzle">Light Drizzle</option>
-                        <option value="Rain">Rain</option>
-                    </select>
-                </div>
-            </div>
+                        <Box>
+                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>Rain Presence</Typography>
+                            <ToggleButtonGroup
+                                value={envData.rainPresence}
+                                exclusive
+                                onChange={handleEnvChange('rainPresence')}
+                                fullWidth
+                                size="small"
+                                color="primary"
+                            >
+                                <ToggleButton value="No Rain">None</ToggleButton>
+                                <ToggleButton value="Light Drizzle">Drizzle</ToggleButton>
+                                <ToggleButton value="Rain">Rain</ToggleButton>
+                            </ToggleButtonGroup>
+                        </Box>
 
-            <button
-                onClick={handleStart}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg transition-colors"
-            >
-                Start Session
-            </button>
-        </div>
+                    </Stack>
+                </Box>
+
+                <Button
+                    variant="contained"
+                    size="large"
+                    onClick={handleStart}
+                    fullWidth
+                    sx={{ height: 56, fontSize: '1.1rem' }}
+                >
+                    Start Session
+                </Button>
+            </Stack>
+        </Box>
     );
 };
