@@ -1,132 +1,68 @@
-# Matuku: Australasian Bittern Field Logger (MVP)
+# Matuku: Modernizing Conservation Field Data
 
 [![Architecture](https://img.shields.io/badge/Architecture-PWA%20(Platform%20Agnostic)-blue.svg)](https://en.wikipedia.org/wiki/Progressive_web_app)
 [![Data Integrity](https://img.shields.io/badge/Data%20Storage-Offline--First%20Reliability-red.svg)](https://developer.android.com/topic/architecture/data-layer/offline-first)
-[![UX Focus](https://img.shields.io/badge/UX%20Design-Protocol%20Optimization%20%26%20Haptics-lightgrey.svg)](#key-features)
+[![Status](https://img.shields.io/badge/Status-MVP%20Complete-success.svg)](#)
+[![Focus](https://img.shields.io/badge/Focus-Conservation%20Tech-green.svg)](#)
 
-**Matuku** is a Minimum Viable Product (MVP) of a Progressive Web Application (PWA) designed to replace manual, error-prone field notes for volunteer observers monitoring the endangered Australasian Bittern (Matuku). It ensures compliance with the [Department of Conservation (DOC) observation protocols](https://www.doc.govt.nz/documents/science-and-technical/docts38entire.pdf) through a structured, mobile-first interface.
+**Matuku** is a specialized Progressive Web Application (PWA) designed to modernize data collection for the endangered Australasian Bittern (Matuku-hūrepo).
 
-#### [initial POC with minimal features](https://storage.googleapis.com/web-visualisations/matuku/dist/index.html)
-### [WIP MVP with latest features](https://storage.googleapis.com/web-visualisations/matuku/index.html)
+Designed and built by a volunteer observer, this tool addresses the specific operational challenges of monitoring cryptic bird species in remote, low-light environments.
 
-### Project Motivation
+# [Click here to try it out!](https://storage.googleapis.com/web-visualisations/matuku/index.html)
 
-This project was inspired by firsthand experience participating in Australasian Bittern monitoring, specifically **logging boom trains** during the critical dusk observation period. Observing that pre-existing application solutions faced adoption and setup challenges - often causing volunteers to revert to (potentially unreliable) manual logging methods - I engineered this alternative. The goal is to provide conservation teams with a robust, platform-agnostic tool that guarantees **data integrity** and minimizes administrative friction.
+---
 
-## Value Proposition (Proof of Concept)
+## The Challenge (Field Analysis)
 
-This project demonstrates the core technical architecture required to guarantee data capture reliability and eliminate major administrative pain points associated with conservation fieldwork.
+While volunteering for the Department of Conservation (DOC) to monitor the critically endangered Matuku, I observed significant friction in the manual data collection process:
 
-| Pain Point | Solution Focus | Portfolio Highlight |
+*   **Operational Environment:** Monitoring occurs at dusk and into the night, often in remote wetlands with no cellular coverage.
+*   **Data Integrity Risks:** Writing paper notes in the dark leads to illegible timestamps, missed data fields, and transcription errors.
+*   **High-Pressure Events:** Male bitterns often call ("boom") in rapid succession (boom trains). Manually recording bearing, distance, and time for every boom is difficult to do accurately in real-time.
+
+## The Solution
+
+I engineered **Matuku** as a digital solution to these specific pain points, bridging the gap between field requirements and technical implementation.
+
+It was built in compliance with the official [Department of Conservation (DOC) observation protocols](https://www.doc.govt.nz/documents/science-and-technical/docts38entire.pdf).
+
+### Key Features & Design Decisions
+
+| Pain Point | Solution Implemented | Benefit |
 | :--- | :--- | :--- |
-| **Data Loss** | **Offline-First Storage:** Local persistence (SQLite/IndexedDB) ensures data integrity regardless of remote connectivity. | Reliability Engineering |
-| **Manual Timestamps** | **Single-Tap Logging:** UX design centralizes the **Core Call Recorder** to auto-capture accurate **HH:MM:SS** on event. | Workflow Automation |
-| **Complex Admin** | **Platform Agnostic & No Login:** Reduces barrier to entry for volunteers and outputs direct **CSV Export** for coordinators. | Accessibility & Data Flow Design |
-| **Nighttime UX** | **Optimized Input:** Enforces **Dark Mode** and integrates **Haptic Feedback** for high-fidelity data entry in low-light conditions. | Constraint-Driven UX |
-
-## Key Features Demonstrated (MVP)
-
-* **1-Hour Dusk Timer** and **Sunset Calculation** (Local/Offline).
-* Structured input for all mandatory environmental variables (Noise, Wind, Cloud Cover).
-* Automated GPS/Time capture and manual **dial/slider** input for accurate compass bearing.
-* Session-based local data storage and **CSV Export** functionality.
+| **No Cell Coverage** | **Offline-First PWA** | Fully functional without internet. Data is persisted locally and exported to CSV immediately. |
+| **Night Blindness** | **Material Design 3 Dark Mode** | A high-contrast, low-glare interface preserves night vision. Large touch targets (FAB) ensure usability with cold hands/gloves. |
+| **Rapid "Boom Trains"** | **"Sticky" Logging Logic** | The app remembers the last bird's ID, bearing, and distance. Observers can log a sequence of booms with a single tap, rather than re-entering data. |
+| **Distance Estimation** | **Protocol-Aligned Slider** | A custom non-linear slider (`0, 10, 25... >1000m`) matches specific DOC recording protocols, reducing cognitive load. |
+| **Setup & Admin Friction** | **Zero-friction PWA:** no installs, no accounts, works in flight mode; runs in any modern browser (Android/iPhone/Windows/Mac) with a single “Add to Home Screen.” | **Faster onboarding, fewer support calls:** coordinators spend less time getting volunteers ready, even in remote areas. |
+| **Onboarding Friction** | **Zero-Setup PWA:** No installs or accounts required; volunteers open a link and start logging immediately, even in flight mode. | Adoption & Change Management |
 
 
-***
 
-# React + TypeScript + Vite
+---
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Technical Implementation
 
-Currently, two official plugins are available:
+This project serves as a practical demonstration of modern web application architecture, focusing on reliability and user experience.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+*   **Core Stack:** React, TypeScript, Vite.
+*   **UI Framework:** Material UI (MUI) v5 – Chosen for its robust accessibility and mobile-first components.
+*   **State Management:** Zustand – For efficient, boilerplate-free state handling.
+*   **Deployment:** GitHub Actions -> Google Cloud Storage (Automated CI/CD).
 
-## React Compiler
+## About the Author & Intent
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+**I am a Business Analyst passionate about using technology to solve real-world problems.**
 
-## Expanding the ESLint configuration
+This project was a self-initiated exercise to demonstrate how digital tools can enhance conservation efforts. I identified a gap in the current workflow, gathered requirements through direct participation, and delivered a functional MVP that solves the problem.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+**I am actively seeking opportunities to apply this skillset—identifying operational problems and building digital solutions—within the conservation or public sector.**
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+If you are involved with DOC, biodiversity monitoring, or similar fields and see value in this approach, I would love to connect.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+[LinkedIn](https://www.linkedin.com/in/matt-millar-3a4892121/)
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-``` 
-
-## Deployment
-
-The GitHub Actions workflow uploads the `dist/` build artifacts to the `web-visualisations` bucket (under the `matuku` prefix). The bucket name and prefix are set once at the job level (`GCS_BUCKET` and `GCS_PREFIX`) to avoid merge conflicts and make it easy to swap destinations.
-
-Ensure the service account used by the `GCP_SA_KEY_MATUKU` secret has **Storage Object Creator** (or **Storage Object Admin**) permissions on that bucket; otherwise uploads will fail with a `storage.objects.create` permission error. Once permissions are fixed, the workflow’s `Validate bucket permissions` step will succeed before attempting uploads.
-
-Quick fix for missing permissions (run locally or in Cloud Shell):
-
-```
-gsutil iam ch serviceAccount:github-deployer@web-visualisations.iam.gserviceaccount.com:roles/storage.objectCreator gs://web-visualisations
-gsutil iam ch serviceAccount:github-deployer@web-visualisations.iam.gserviceaccount.com:roles/storage.legacyBucketReader gs://web-visualisations
-```
-
-If the bucket doesn't exist yet, create it first:
-
-```
-gsutil mb -p web-visualisations -c standard -l australia-southeast1 gs://web-visualisations
-```
-
-## Deployment
-
-The GitHub Actions workflow uploads the `dist/` build artifacts to the `web-visualisations` bucket (under the `matuku` prefix). Ensure the service account used by the `GCP_SA_KEY_MATUKU` secret has **Storage Object Creator** (or **Storage Object Admin**) permissions on that bucket; otherwise uploads will fail with a `storage.objects.create` permission error.
