@@ -73,7 +73,16 @@ export const useSessionStore = create<SessionState>()(
                 })),
             deleteBoomLog: (id) =>
                 set((state) => ({ boomLogs: state.boomLogs.filter((log) => log.id !== id) })),
-            endSession: () => set({ status: 'FINISHED' }),
+            endSession: () =>
+                set({
+                    status: 'SETUP',
+                    sessionStartTime: '',
+                    boomLogs: [],
+                    environmentalLogs: [],
+                    bitternIds: [],
+                    nextBitternId: 1,
+                    lastSelectedBitternId: null,
+                }),
             resetSession: () =>
                 set({
                     ...initialState,
