@@ -61,7 +61,6 @@ This project was a self-initiated exercise to demonstrate how digital tools can 
 
 If you are involved with DOC, biodiversity monitoring, or similar fields and see value in this approach, I would love to connect.
 
-[Link to your LinkedIn or Portfolio] | [Link to Email]
 
 ---
 
